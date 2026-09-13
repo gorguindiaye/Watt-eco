@@ -23,6 +23,10 @@ const USER = {
   meter: "SN-0192837465",
 };
 
+function normalizeMeter(value) {
+  return (value || "").trim().toUpperCase();
+}
+
 const CREDIT = {
   remainingKwh: 73.6,
   percent: 73,
@@ -279,12 +283,12 @@ function AlertBanner({ text }) {
   );
 }
 
-function BottomNav({ active, onNav, onMore }) {
+function BottomNav({ active, onNav, onMore, onPurchase }) {
   const items = [
     { key: "dashboard", label: "Accueil", Icon: Home },
     { key: "consumption", label: "Consommation", Icon: Activity },
     { key: "devices", label: "Appareils", Icon: Cpu },
-    { key: "more", label: "Plus", Icon: Menu },
+    { key: "purchase", label: "Acheter du courant", Icon: Plus },
   ];
   return (
     <div style={{
@@ -294,7 +298,13 @@ function BottomNav({ active, onNav, onMore }) {
       {items.map((it) => {
         const isActive = active === it.key;
         return (
-          <button key={it.key} onClick={() => (it.key === "more" ? onMore() : onNav(it.key))} style={{
+          <button key={it.key} onClick={() => {
+            if (it.key === "purchase") {
+              onPurchase ? onPurchase() : onMore();
+              return;
+            }
+            onNav(it.key);
+          }} style={{
             flex: 1, background: "none", border: "none", display: "flex", flexDirection: "column",
             alignItems: "center", gap: 4, cursor: "pointer", padding: 4,
           }}>
@@ -358,19 +368,7 @@ function SplashScreen({ onStart, onLogin }) {
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04) 28%, rgba(255,255,255,0.15) 100%)" }} />
 
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 18px 0" }}>
-          <div style={{ fontWeight: 700, fontSize: 16, color: "#0f2f22", letterSpacing: "-0.03em" }}>9:41</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "end", gap: 3 }}>
-              <span style={{ display: "block", width: 4, height: 8, borderRadius: 2, background: "#0f2f22" }} />
-              <span style={{ display: "block", width: 4, height: 12, borderRadius: 2, background: "#0f2f22" }} />
-              <span style={{ display: "block", width: 4, height: 16, borderRadius: 2, background: "#0f2f22" }} />
-            </div>
-            <div style={{ width: 26, height: 14, borderRadius: 8, border: "2px solid #0f2f22", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 2 }}>
-              <div style={{ width: 10, height: 7, borderRadius: 4, background: "#0f2f22" }} />
-            </div>
-          </div>
-        </div>
+        <div style={{ height: 18 }} />
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 28, textAlign: "center" }} />
 
@@ -633,6 +631,14 @@ function LoginScreen({ onBack, onLogin, onSignup }) {
 
 function SignupScreen({ onBack, onSignup, onLogin }) {
   const [showPw, setShowPw] = useState(false);
+  const [form, setForm] = useState({ fullName: "", phone: "", email: "", password: "", meter: "" });
+
+  const handleSignup = () => {
+    const meter = normalizeMeter(form.meter);
+    if (!meter) return;
+    onSignup(meter);
+  };
+
   return (
     <ScreenScroll>
       <TopBarBack onBack={onBack} />
@@ -642,11 +648,13 @@ function SignupScreen({ onBack, onSignup, onLogin }) {
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 22 }}>
-        <FormInput Icon={User} placeholder="Nom complet" />
-        <FormInput Icon={Phone} placeholder="Téléphone" />
-        <FormInput Icon={Mail} placeholder="Email" />
+        <FormInput Icon={User} placeholder="Nom complet" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
+        <FormInput Icon={Phone} placeholder="Téléphone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+        <FormInput Icon={Mail} placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+        <FormInput Icon={Cpu} placeholder="Numéro de compteur" value={form.meter} onChange={(e) => setForm({ ...form, meter: e.target.value })} />
         <FormInput
-          Icon={Lock} type={showPw ? "text" : "password"} placeholder="Mot de passe"
+          Icon={Lock} type={showPw ? "text" : "password"} placeholder="Mot de passe" value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
           trailing={
             <button onClick={() => setShowPw((v) => !v)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex" }}>
               {showPw ? <EyeOff size={18} color="var(--text-muted)" /> : <Eye size={18} color="var(--text-muted)" />}
@@ -655,7 +663,7 @@ function SignupScreen({ onBack, onSignup, onLogin }) {
         />
       </div>
 
-      <PrimaryButton onClick={onSignup} style={{ marginBottom: 16 }}>S'inscrire</PrimaryButton>
+      <PrimaryButton onClick={handleSignup} style={{ marginBottom: 16 }}>S'inscrire</PrimaryButton>
 
       <div style={{ textAlign: "center", fontSize: 13, color: "var(--text-muted)" }}>
         Déjà un compte ?{" "}
@@ -667,7 +675,7 @@ function SignupScreen({ onBack, onSignup, onLogin }) {
   );
 }
 
-function DashboardScreen({ onNav, onMore, onOpenPurchase, credit }) {
+function DashboardScreen({ onNav, onMore, onOpenPurchase, onOpenMeters, activeMeter, credit }) {
   const [period, setPeriod] = useState("Semaine");
   const overAvg = Math.round(((TODAY_KWH - AVG_KWH) / AVG_KWH) * 100);
   const percent = Math.min(100, Math.max(0, credit.percent));
@@ -680,13 +688,21 @@ function DashboardScreen({ onNav, onMore, onOpenPurchase, credit }) {
             <div style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 18 }}>Bonjour, {USER.firstName} 👋</div>
             <div style={{ fontSize: 12.5, color: "var(--text-muted)" }}>Voici un aperçu de votre consommation.</div>
           </div>
-          <button onClick={onMore} style={{ border: "none", background: "none", cursor: "pointer" }}>
-            <IconChip Icon={User} bg="var(--primary-light)" fg="var(--primary)" size={42} iconSize={19} />
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button onClick={onMore} style={{
+              border: "1px solid var(--border)", background: "#fff", color: "var(--text)",
+              borderRadius: 12, fontWeight: 700, fontSize: 12.5, padding: "10px 12px", cursor: "pointer",
+            }}>
+              Plus
+            </button>
+            <button onClick={onOpenMeters} style={{ border: "none", background: "none", cursor: "pointer" }}>
+              <IconChip Icon={User} bg="var(--primary-light)" fg="var(--primary)" size={42} iconSize={19} />
+            </button>
+          </div>
         </div>
 
-        <div onClick={onOpenPurchase} style={{
-          borderRadius: 26, padding: 22, marginBottom: 18, cursor: "pointer",
+        <div style={{
+          borderRadius: 26, padding: 22, marginBottom: 18,
           background: "linear-gradient(135deg, var(--dark-2), var(--primary))",
           boxShadow: "0 14px 30px rgba(11,43,31,0.25)",
         }}>
@@ -700,18 +716,8 @@ function DashboardScreen({ onNav, onMore, onOpenPurchase, credit }) {
           <div style={{ height: 8, borderRadius: 8, background: "rgba(255,255,255,0.22)", overflow: "hidden", marginBottom: 12 }}>
             <div style={{ width: `${percent}%`, height: "100%", background: "#fff" }} />
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: "rgba(255,255,255,0.8)", alignItems: "center", gap: 8 }}>
-            <span>Achat initial {credit.initialKwh.toFixed(1)} kWh</span>
-            <button
-              onClick={(e) => { e.stopPropagation(); onOpenPurchase(); }}
-              style={{
-                border: "1px solid rgba(255,255,255,0.28)", background: "rgba(255,255,255,0.08)",
-                color: "#fff", padding: "7px 12px", borderRadius: 9999, cursor: "pointer",
-                fontSize: 11.5, fontWeight: 700, whiteSpace: "nowrap",
-              }}
-            >
-              Acheter du courant
-            </button>
+          <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.8)" }}>
+            Achat initial {credit.initialKwh.toFixed(1)} kWh
           </div>
         </div>
 
@@ -728,6 +734,28 @@ function DashboardScreen({ onNav, onMore, onOpenPurchase, credit }) {
               <div style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>{s.value}</div>
             </CardFlat>
           ))}
+        </div>
+
+        <div onClick={onOpenPurchase} style={{
+          borderRadius: 20, padding: "16px 18px", marginBottom: 18, cursor: "pointer",
+          background: "#fff", border: "1px solid var(--border)", boxShadow: "0 8px 20px rgba(11,43,31,0.06)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 11.5, color: "var(--text-muted)", marginBottom: 4 }}>Achat de courant</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>Rechargez votre crédit</div>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onOpenPurchase(); }}
+              style={{
+                border: "none", background: "var(--primary-light)", color: "var(--primary)",
+                padding: "9px 14px", borderRadius: 9999, cursor: "pointer",
+                fontSize: 12.5, fontWeight: 700, whiteSpace: "nowrap",
+              }}
+            >
+              Acheter
+            </button>
+          </div>
         </div>
 
         <Card style={{ marginBottom: 4 }}>
@@ -758,12 +786,12 @@ function DashboardScreen({ onNav, onMore, onOpenPurchase, credit }) {
 
         <AlertBanner text={<>Votre consommation est <strong>{overAvg}% supérieure</strong> à votre moyenne habituelle.</>} />
       </ScreenScroll>
-      <BottomNav active="dashboard" onNav={onNav} onMore={onMore} />
+      <BottomNav active="dashboard" onNav={onNav} onMore={onMore} onPurchase={onOpenPurchase} />
     </>
   );
 }
 
-function ConsumptionScreen({ onNav, onMore }) {
+function ConsumptionScreen({ onNav, onMore, onOpenPurchase }) {
   const [tab, setTab] = useState("Jour");
   return (
     <>
@@ -827,12 +855,12 @@ function ConsumptionScreen({ onNav, onMore }) {
 
         <AlertBanner text={<>Votre consommation est <strong>12% supérieure</strong> à votre moyenne habituelle.</>} />
       </ScreenScroll>
-      <BottomNav active="consumption" onNav={onNav} onMore={onMore} />
+      <BottomNav active="consumption" onNav={onNav} onMore={onMore} onPurchase={onOpenPurchase} />
     </>
   );
 }
 
-function DevicesScreen({ onNav, onMore }) {
+function DevicesScreen({ onNav, onMore, onOpenPurchase }) {
   const total = DEVICES.reduce((a, d) => a + d.kwh, 0).toFixed(1);
   return (
     <>
@@ -886,7 +914,7 @@ function DevicesScreen({ onNav, onMore }) {
           ))}
         </div>
       </ScreenScroll>
-      <BottomNav active="devices" onNav={onNav} onMore={onMore} />
+      <BottomNav active="devices" onNav={onNav} onMore={onMore} onPurchase={onOpenPurchase} />
     </>
   );
 }
@@ -1196,10 +1224,10 @@ function Row({ label, value, last }) {
   );
 }
 
-function ProfileScreen({ onBack, onLogout }) {
+function ProfileScreen({ onBack, onLogout, activeMeter }) {
   const rows = [
     { label: "Informations personnelles", Icon: User },
-    { label: "Mes compteurs", Icon: Cpu, value: USER.meter },
+    { label: "Mon compteur", Icon: Cpu, value: activeMeter || USER.meter },
     { label: "Notifications", Icon: Bell },
     { label: "Mode sombre", Icon: Moon },
     { label: "Langue", Icon: Globe, value: "Français" },
@@ -1242,6 +1270,76 @@ function ProfileScreen({ onBack, onLogout }) {
         <LogOut size={17} /> Se déconnecter
       </button>
     </ScreenScroll>
+  );
+}
+
+function MeterSwitcher({ isOpen, onClose, meters, activeMeter, onSelectMeter, onAddMeter, onDisconnectMeter, onLogout }) {
+  const [draft, setDraft] = useState("");
+
+  if (!isOpen) return null;
+
+  const submitMeter = () => {
+    const meter = normalizeMeter(draft);
+    if (!meter) return;
+    onAddMeter(meter);
+    setDraft("");
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 30, background: "rgba(11,43,31,0.18)" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        position: "absolute", top: 22, right: 18, width: 280,
+        background: "#fff", borderRadius: 22, border: "1px solid var(--border)",
+        boxShadow: "0 24px 50px rgba(11,43,31,0.18)", padding: 16,
+      }}>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Mes compteurs</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+          {meters.map((meter) => {
+            const connected = meter === activeMeter;
+            return (
+              <div key={meter} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                gap: 8, padding: "10px 12px", borderRadius: 12, background: connected ? "var(--primary-light)" : "#F7FAF8",
+                border: connected ? "1px solid rgba(30,132,73,0.2)" : "1px solid var(--border)",
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 12.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis" }}>{meter}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{connected ? "Actif" : "Disponible"}</div>
+                </div>
+                {!connected ? (
+                  <button onClick={() => onSelectMeter(meter)} style={{ border: "none", background: "var(--primary)", color: "#fff", borderRadius: 10, padding: "8px 10px", cursor: "pointer", fontSize: 11.5, fontWeight: 700 }}>
+                    Connecter
+                  </button>
+                ) : (
+                  <button onClick={() => onDisconnectMeter(meter)} style={{ border: "none", background: "var(--red-bg)", color: "var(--red)", borderRadius: 10, padding: "8px 10px", cursor: "pointer", fontSize: 11.5, fontWeight: 700 }}>
+                    Déconnecter
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="N° compteur"
+            style={{
+              flex: 1, borderRadius: 12, border: "1px solid var(--border)", background: "#fff",
+              padding: "10px 12px", fontSize: 12.5, outline: "none",
+            }}
+          />
+          <button onClick={submitMeter} style={{ border: "none", background: "var(--primary)", color: "#fff", borderRadius: 12, padding: "10px 12px", cursor: "pointer", fontWeight: 700 }}>
+            Ajouter
+          </button>
+        </div>
+
+        <button onClick={onLogout} style={{ width: "100%", border: "none", background: "var(--red-bg)", color: "var(--red)", borderRadius: 12, padding: "11px 12px", cursor: "pointer", fontWeight: 700 }}>
+          Se déconnecter
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -1312,6 +1410,9 @@ export default function WattEcoApp() {
   const [screen, setScreen] = useState("splash");
   const [obStep, setObStep] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [meterMenuOpen, setMeterMenuOpen] = useState(false);
+  const [meters, setMeters] = useState([USER.meter]);
+  const [activeMeter, setActiveMeter] = useState(USER.meter);
   const [credit, setCredit] = useState({
     remainingKwh: CREDIT.remainingKwh,
     percent: CREDIT.percent,
@@ -1322,7 +1423,31 @@ export default function WattEcoApp() {
   });
   const [purchaseHistory, setPurchaseHistory] = useState(PURCHASE_HISTORY);
 
-  const goto = (s) => { setScreen(s); setDrawerOpen(false); };
+  const goto = (s) => { setScreen(s); setDrawerOpen(false); setMeterMenuOpen(false); };
+
+  const connectMeter = (meterValue) => {
+    const normalized = normalizeMeter(meterValue);
+    if (!normalized) return;
+    setMeters((prev) => (prev.includes(normalized) ? prev : [...prev, normalized]));
+    setActiveMeter(normalized);
+    setMeterMenuOpen(false);
+  };
+
+  const disconnectMeter = (meterValue) => {
+    const remaining = meters.filter((m) => m !== meterValue);
+    if (remaining.length === 0) return;
+    setMeters(remaining);
+    if (activeMeter === meterValue) {
+      setActiveMeter(remaining[0]);
+    }
+  };
+
+  const handleLogout = () => {
+    setMeters([USER.meter]);
+    setActiveMeter(USER.meter);
+    setMeterMenuOpen(false);
+    goto("splash");
+  };
 
   const handlePurchaseComplete = (purchase) => {
     setPurchaseHistory((prev) => [{ ...purchase, cat: purchase.method === "Wave" || purchase.method === "Orange Money" ? "Mobile Money" : "CFE" }, ...prev]);
@@ -1368,16 +1493,16 @@ export default function WattEcoApp() {
       content = <LoginScreen onBack={() => goto("splash")} onLogin={() => goto("dashboard")} onSignup={() => goto("signup")} />;
       break;
     case "signup":
-      content = <SignupScreen onBack={() => goto("splash")} onSignup={() => goto("dashboard")} onLogin={() => goto("login")} />;
+      content = <SignupScreen onBack={() => goto("splash")} onSignup={(meter) => { connectMeter(meter); goto("dashboard"); }} onLogin={() => goto("login")} />;
       break;
     case "dashboard":
-      content = <DashboardScreen onNav={goto} onMore={() => setDrawerOpen(true)} onOpenPurchase={() => goto("purchaseNew")} credit={credit} />;
+      content = <DashboardScreen onNav={goto} onMore={() => setDrawerOpen(true)} onOpenMeters={() => setMeterMenuOpen((v) => !v)} onOpenPurchase={() => goto("purchaseNew")} activeMeter={activeMeter} credit={credit} />;
       break;
     case "consumption":
-      content = <ConsumptionScreen onNav={goto} onMore={() => setDrawerOpen(true)} />;
+      content = <ConsumptionScreen onNav={goto} onMore={() => setDrawerOpen(true)} onOpenPurchase={() => goto("purchaseNew")} />;
       break;
     case "devices":
-      content = <DevicesScreen onNav={goto} onMore={() => setDrawerOpen(true)} />;
+      content = <DevicesScreen onNav={goto} onMore={() => setDrawerOpen(true)} onOpenPurchase={() => goto("purchaseNew")} />;
       break;
     case "alerts":
       content = <AlertsScreen onBack={() => goto("dashboard")} />;
@@ -1392,7 +1517,7 @@ export default function WattEcoApp() {
       content = <PurchaseHistoryScreen onBack={() => goto("dashboard")} purchases={purchaseHistory} />;
       break;
     case "profile":
-      content = <ProfileScreen onBack={() => goto("dashboard")} onLogout={() => goto("splash")} />;
+      content = <ProfileScreen onBack={() => goto("dashboard")} onLogout={handleLogout} activeMeter={activeMeter} />;
       break;
     default:
       content = null;
@@ -1430,8 +1555,19 @@ export default function WattEcoApp() {
         </div>
 
         {(showDrawerNav) && (
-          <BottomNav active="more" onNav={goto} onMore={() => setDrawerOpen(true)} />
+          <BottomNav active="purchase" onNav={goto} onMore={() => setDrawerOpen(true)} onPurchase={() => goto("purchaseNew")} />
         )}
+
+        <MeterSwitcher
+          isOpen={meterMenuOpen}
+          onClose={() => setMeterMenuOpen(false)}
+          meters={meters}
+          activeMeter={activeMeter}
+          onSelectMeter={(meter) => { setActiveMeter(meter); setMeterMenuOpen(false); }}
+          onAddMeter={connectMeter}
+          onDisconnectMeter={disconnectMeter}
+          onLogout={handleLogout}
+        />
 
         <SideDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} onNav={goto} />
       </div>
