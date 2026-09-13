@@ -736,28 +736,6 @@ function DashboardScreen({ onNav, onMore, onOpenPurchase, onOpenMeters, activeMe
           ))}
         </div>
 
-        <div onClick={onOpenPurchase} style={{
-          borderRadius: 20, padding: "16px 18px", marginBottom: 18, cursor: "pointer",
-          background: "#fff", border: "1px solid var(--border)", boxShadow: "0 8px 20px rgba(11,43,31,0.06)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <div>
-              <div style={{ fontSize: 11.5, color: "var(--text-muted)", marginBottom: 4 }}>Achat de courant</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>Rechargez votre crédit</div>
-            </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); onOpenPurchase(); }}
-              style={{
-                border: "none", background: "var(--primary-light)", color: "var(--primary)",
-                padding: "9px 14px", borderRadius: 9999, cursor: "pointer",
-                fontSize: 12.5, fontWeight: 700, whiteSpace: "nowrap",
-              }}
-            >
-              Acheter
-            </button>
-          </div>
-        </div>
-
         <Card style={{ marginBottom: 4 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <div style={{ fontSize: 14, fontWeight: 600 }}>Évolution de votre consommation</div>
