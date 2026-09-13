@@ -375,84 +375,40 @@ function SplashScreen({ onStart, onLogin }) {
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 28, textAlign: "center" }} />
 
         <div style={{ marginTop: "auto", padding: "0 14px 18px", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
-            {[
-              { Icon: Zap, label: "Crédit" },
-              { Icon: TrendingUp, label: "Prévision" },
-              { Icon: Bell, label: "Alertes" },
-              { Icon: Leaf, label: "Économie" },
-            ].map((item) => (
-              <div key={item.label} style={{
-                background: "rgba(255,255,255,0.78)",
-                borderRadius: 18,
-                border: "2px solid rgba(30,132,73,0.45)",
-                boxShadow: "0 8px 18px rgba(15, 58, 40, 0.08)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: 86,
-                textAlign: "center",
-                padding: "8px 4px",
-              }}>
-                <div style={{ width: 42, height: 42, borderRadius: 14, background: "#dff4e5", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <item.Icon size={20} color="#1e8449" />
-                </div>
-                <div style={{ marginTop: 6, fontSize: 10.5, lineHeight: 1.1, fontWeight: 700, color: "#0d2b1f" }}>{item.label}</div>
-              </div>
-            ))}
-          </div>
-
-          <button onClick={onStart} style={{
-            width: "100%",
-            height: 56,
-            border: "none",
-            borderRadius: 18,
-            background: "linear-gradient(135deg, #0f3a28, #1e8449)",
-            color: "#fff",
-            fontFamily: "Poppins, sans-serif",
-            fontWeight: 800,
-            fontSize: 26,
-            letterSpacing: "-0.04em",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            boxShadow: "0 12px 22px rgba(17, 62, 42, 0.18)",
-            cursor: "pointer",
-          }}>
-            <span>Commencer</span>
-            <ArrowRight size={20} />
-          </button>
-
-          <button onClick={onLogin} style={{
-            width: "100%",
-            border: "none",
-            background: "transparent",
-            color: "#0d2b1f",
-            fontSize: 16,
-            fontWeight: 600,
-            marginTop: 12,
-            cursor: "pointer",
-            padding: 0,
-          }}>
-            J'ai déjà un compte
-          </button>
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 20 }}>🇸🇳</span>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#0d2b1f" }}>Sénégal</div>
-                <div style={{ fontSize: 10, color: "#173f31" }}>Portée d'une énergie durable</div>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              {[0, 1, 2].map((i) => (
-                <div key={i} style={{ width: i === 0 ? 16 : 7, height: 7, borderRadius: 9999, background: i === 0 ? "#0f3a28" : "rgba(15,58,40,0.3)" }} />
-              ))}
-            </div>
+          <div style={{ display: "flex", gap: 10, width: "100%" }}>
+            <button
+              onClick={onStart}
+              style={{
+                flex: 1,
+                border: "none",
+                borderRadius: 14,
+                background: "linear-gradient(135deg, #0f3a28, #1e8449)",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: 15,
+                padding: "12px 14px",
+                cursor: "pointer",
+                boxShadow: "0 10px 18px rgba(17, 62, 42, 0.14)",
+              }}
+            >
+              Démarrer
+            </button>
+            <button
+              onClick={onLogin}
+              style={{
+                flex: 1,
+                border: "1px solid rgba(17, 62, 42, 0.12)",
+                borderRadius: 14,
+                background: "rgba(255,255,255,0.72)",
+                color: "#0d2b1f",
+                fontWeight: 600,
+                fontSize: 15,
+                padding: "12px 14px",
+                cursor: "pointer",
+              }}
+            >
+              Se connecter
+            </button>
           </div>
         </div>
       </div>
