@@ -61,14 +61,6 @@ const SCENARIOS = [
   { key: "forte", name: "Forte consommation", Icon: Flame, color: "var(--red)", bg: "var(--red-bg)", rate: "6 kWh/j", days: "12 jours" },
 ];
 
-const DEVICES = [
-  { name: "Climatiseur", Icon: Wind, watt: 1200, hours: 4.5, kwh: 2.16, pct: 45, color: "#1E8449" },
-  { name: "Réfrigérateur", Icon: Snowflake, watt: 200, hours: 24, kwh: 0.96, pct: 20, color: "#3B82C4" },
-  { name: "Télévision", Icon: Tv, watt: 100, hours: 4, kwh: 0.38, pct: 8, color: "#B9C4BD" },
-  { name: "Éclairage", Icon: Lightbulb, watt: 60, hours: 8, kwh: 0.58, pct: 12, color: "#F2A93B" },
-  { name: "Autres appareils", Icon: Cpu, watt: 0, hours: 0, kwh: 0.7, pct: 15, color: "#DADFDC" },
-];
-
 const ALERTS = [
   { id: 1, tone: "red", cat: "Alerte", Icon: AlertTriangle, title: "Consommation anormale", desc: "Votre consommation est 90% supérieure à votre moyenne habituelle.", time: "Il y a 2 heures" },
   { id: 2, tone: "orange", cat: "Alerte", Icon: BatteryWarning, title: "Bientôt épuisé", desc: "Votre crédit passera sous 20 kWh dans environ 4 jours.", time: "Il y a 5 heures" },
@@ -114,19 +106,13 @@ const ONBOARDING = [
     illustration: "alerts",
   },
   {
-    pill: "4/6",
-    title: "Comprenez vos appareils",
-    text: "Identifiez quels appareils pèsent le plus sur votre facture et ajustez vos habitudes en conséquence.",
-    illustration: "devices",
-  },
-  {
-    pill: "5/6",
+    pill: "4/5",
     title: "Maîtrisez vos dépenses en FCFA",
     text: "Suivez l'évolution de vos dépenses d'électricité mois après mois et repérez les économies réalisées.",
     illustration: "expenses",
   },
   {
-    pill: "6/6",
+    pill: "5/5",
     title: "Prêt à prendre le contrôle ?",
     text: "Créez votre compte pour commencer à suivre votre consommation dès aujourd'hui.",
     illustration: "final",
@@ -287,7 +273,6 @@ function BottomNav({ active, onNav, onMore, onPurchase }) {
   const items = [
     { key: "dashboard", label: "Accueil", Icon: Home },
     { key: "consumption", label: "Consommation", Icon: Activity },
-    { key: "devices", label: "Appareils", Icon: Cpu },
     { key: "purchase", label: "Acheter du courant", Icon: Plus },
   ];
   return (
@@ -480,32 +465,6 @@ function OnboardingIllustration({ kind }) {
           </CardFlat>
         ))}
       </div>
-    );
-  }
-  if (kind === "devices") {
-    return (
-      <Card>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 96, height: 96 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={DEVICES} dataKey="pct" innerRadius={30} outerRadius={46} stroke="none">
-                  {DEVICES.map((d, i) => <Cell key={i} fill={d.color} />)}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-            {DEVICES.slice(0, 3).map((d) => (
-              <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-                <span style={{ width: 8, height: 8, borderRadius: 2, background: d.color, display: "inline-block" }} />
-                <span style={{ color: "var(--text)" }}>{d.name}</span>
-                <span style={{ marginLeft: "auto", color: "var(--text-muted)" }}>{d.pct}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
     );
   }
   if (kind === "expenses") {
@@ -834,65 +793,6 @@ function ConsumptionScreen({ onNav, onMore, onOpenPurchase }) {
         <AlertBanner text={<>Votre consommation est <strong>12% supérieure</strong> à votre moyenne habituelle.</>} />
       </ScreenScroll>
       <BottomNav active="consumption" onNav={onNav} onMore={onMore} onPurchase={onOpenPurchase} />
-    </>
-  );
-}
-
-function DevicesScreen({ onNav, onMore, onOpenPurchase }) {
-  const total = DEVICES.reduce((a, d) => a + d.kwh, 0).toFixed(1);
-  return (
-    <>
-      <ScreenScroll>
-        <TopBarTitle title="Mes appareils" subtitle="Découvrez quels appareils consomment le plus." />
-        <Card style={{ marginBottom: 18 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <div style={{ width: 120, height: 120, position: "relative", flexShrink: 0 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={DEVICES} dataKey="pct" nameKey="name" innerRadius={38} outerRadius={58} stroke="#fff" strokeWidth={2}>
-                    {DEVICES.map((d, i) => <Cell key={i} fill={d.color} />)}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div style={{
-                position: "absolute", inset: 0, display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center", pointerEvents: "none",
-              }}>
-                <div style={{ fontSize: 9.5, color: "var(--text-muted)" }}>Total estimé</div>
-                <div style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 14 }}>{total} kWh/j</div>
-              </div>
-            </div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-              {DEVICES.map((d) => (
-                <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-                  <span style={{ width: 9, height: 9, borderRadius: 3, background: d.color, display: "inline-block", flexShrink: 0 }} />
-                  <span style={{ color: "var(--text)", flex: 1 }}>{d.name}</span>
-                  <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>{d.pct}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-
-        <PrimaryButton style={{ marginBottom: 18 }}><Plus size={17} /> Ajouter un appareil</PrimaryButton>
-
-        <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 10 }}>Mes appareils</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {DEVICES.filter((d) => d.watt > 0).map((d) => (
-            <CardFlat key={d.name}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <IconChip Icon={d.Icon} bg="var(--primary-light)" fg="var(--primary)" size={40} iconSize={18} radius={12} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 600 }}>{d.name}</div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-muted)" }}>{d.watt} W · {d.hours} h/jour</div>
-                </div>
-                <div style={{ fontWeight: 700, fontSize: 13.5 }}>{d.kwh} kWh/j</div>
-              </div>
-            </CardFlat>
-          ))}
-        </div>
-      </ScreenScroll>
-      <BottomNav active="devices" onNav={onNav} onMore={onMore} onPurchase={onOpenPurchase} />
     </>
   );
 }
@@ -1325,7 +1225,6 @@ function SideDrawer({ open, onClose, onNav }) {
   const links = [
     { key: "dashboard", label: "Accueil", Icon: Home },
     { key: "consumption", label: "Consommation", Icon: Activity },
-    { key: "devices", label: "Appareils", Icon: Cpu },
     { key: "expenses", label: "Dépenses", Icon: Wallet },
     { key: "purchaseHistory", label: "Historique des achats", Icon: History },
     { key: "alerts", label: "Alertes", Icon: Bell },
@@ -1449,7 +1348,7 @@ export default function WattEcoApp() {
     });
   };
 
-  const bottomNavScreens = ["dashboard", "consumption", "devices"];
+  const bottomNavScreens = ["dashboard", "consumption"];
   const drawerOnlyScreens = ["alerts", "expenses", "purchaseHistory", "profile"];
 
   let content = null;
@@ -1478,9 +1377,6 @@ export default function WattEcoApp() {
       break;
     case "consumption":
       content = <ConsumptionScreen onNav={goto} onMore={() => setDrawerOpen(true)} onOpenPurchase={() => goto("purchaseNew")} />;
-      break;
-    case "devices":
-      content = <DevicesScreen onNav={goto} onMore={() => setDrawerOpen(true)} onOpenPurchase={() => goto("purchaseNew")} />;
       break;
     case "alerts":
       content = <AlertsScreen onBack={() => goto("dashboard")} />;
